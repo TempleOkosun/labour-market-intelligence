@@ -17,11 +17,10 @@ class ReedVacanciesSpider(Spider):
             yield Request(actual_url, callback=self.parse_vacancy)
 
 
-        # Processing Next Page.
+        # For Processing next page.
         next_page_url = response.xpath('//*[@id="nextPage"]/@href').extract_first()
         absolute_next_page_url = 'https://www.reed.co.uk' + next_page_url
         yield Request(absolute_next_page_url)
-
 
 
     def parse_vacancy(self, response):
@@ -29,10 +28,12 @@ class ReedVacanciesSpider(Spider):
         job_id = response.xpath('//*[@class="reference text-center"]/text()').extract_first()[11:]
         employment_type = response.xpath('//*[@itemprop="employmentType"]/text()').extract_first()
         location = response.xpath('//*[@itemprop="addressLocality"]/text()').extract_first()
+        region = response.xpath('//*[@itemprop="addressRegion"]/text()').extract_first()
         salary = response.xpath('//*[@itemprop="baseSalary"]/span/text()').extract_first()
         posted_by = response.xpath('//*[@itemprop="name"]/text()').extract_first()
         job_poster_url = response.xpath('//*[@itemprop="url"]/@content').extract()[0]
-        job_title = response.xpath('//*[@itemprop="title"]/@content').extract_first()
+        job_title = response.xpath('//*[@class="col-xs-12"]/h1/text()').extract_first()
+        # job_title = response.xpath('//*[@itemprop="title"]/@content').extract_first()
         country = response.xpath('//*[@id="jobCountry"]/@value').extract_first()
         job_desc = response.xpath('//*[@itemprop="description"]').extract_first()
         date_posted = response.xpath('//*[@itemprop="datePosted"]/@content').extract_first()
@@ -45,6 +46,7 @@ class ReedVacanciesSpider(Spider):
             'Job_Id': job_id,
             'Employment_Type': employment_type,
             'Location': location,
+            'Region': region,
             'Salary': salary,
             'Posted_By': posted_by,
             'Job_Poster_Url': job_poster_url,
