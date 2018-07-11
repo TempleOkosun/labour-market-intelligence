@@ -3,6 +3,7 @@
 from scrapy import Spider
 from scrapy.http import Request
 import time
+import random
 
 class ReedVacanciesSpider(Spider):
     name = 'reed-vacancies'
@@ -17,9 +18,12 @@ class ReedVacanciesSpider(Spider):
             yield Request(actual_url, callback=self.parse_vacancy)
 
 
+
         # For Processing next page.
         next_page_url = response.xpath('//*[@id="nextPage"]/@href').extract_first()
         absolute_next_page_url = 'https://www.reed.co.uk' + next_page_url
+        sleep_time = random.randint(10, 15)
+        time.sleep(sleep_time)
         yield Request(absolute_next_page_url)
 
 
@@ -40,6 +44,7 @@ class ReedVacanciesSpider(Spider):
         valid_till = response.xpath('//*[@itemprop="validThrough"]/@content').extract_first()
         industry = response.xpath('//*[@itemprop="industry"]/@content').extract_first()
         time_crawled = time.asctime()
+        data_source = "reed.co.uk"
 
         yield {
             'Job_Url': full_job_url,
@@ -56,6 +61,7 @@ class ReedVacanciesSpider(Spider):
             'Date_Posted': date_posted,
             'Valid_Till': valid_till,
             'Industry': industry,
-            'Time_Crawled': time_crawled
+            'Time_Crawled': time_crawled,
+            'Data_Source': data_source
         }
 
