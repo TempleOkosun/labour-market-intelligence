@@ -66,6 +66,7 @@ CONCURRENT_REQUESTS = 20
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
+# Settings for connecting to MongoDB
 ITEM_PIPELINES = {
     'reed_spider.pipelines.MongoDBPipeline':300,
 }
@@ -81,9 +82,9 @@ MONGODB_COLLECTION = 'jobs'
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
 AUTOTHROTTLE_ENABLED = True
 # The initial download delay
-AUTOTHROTTLE_START_DELAY = 8
+AUTOTHROTTLE_START_DELAY = 12
 # The maximum download delay to be set in case of high latencies
-AUTOTHROTTLE_MAX_DELAY = 120
+AUTOTHROTTLE_MAX_DELAY = 150
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
 AUTOTHROTTLE_TARGET_CONCURRENCY = 0.5
