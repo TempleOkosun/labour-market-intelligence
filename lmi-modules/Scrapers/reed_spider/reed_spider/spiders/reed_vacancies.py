@@ -4,6 +4,7 @@ from scrapy import Spider
 from scrapy.http import Request
 import time
 import random
+from bs4 import BeautifulSoup
 
 class ReedVacanciesSpider(Spider):
     name = 'reed-vacancies'
@@ -14,7 +15,8 @@ class ReedVacanciesSpider(Spider):
         # Get all the urls for the Job Ads on the page
         job_urls = response.xpath('//h3/a/@href').extract()
 
-        # For each url, retrieve the full page and give it to the parser function.
+        # For each url, retrieve the full page-
+        # (where we will get the complete details) and give it to the parser function.
         for job_url in job_urls:
             actual_url = 'https://www.reed.co.uk' + job_url
             yield Request(actual_url, callback=self.parse_vacancy)
@@ -23,8 +25,8 @@ class ReedVacanciesSpider(Spider):
         # For Processing next page.
         # Get the url for next page.
         # I avoided while loop to check if the next page is available.
-        # I certainly dont want to run the code till end of the database,  that will be too much on the server.
-        # reed.co.uk shuffles the data view every time a new connection is started.
+        # I certainly dont want to run the code till end of the database, that will be too much on the server.
+        # NB: reed.co.uk shuffles the data view every time a new connection is started.
 
         next_page_url = response.xpath('//*[@id="nextPage"]/@href').extract_first()
 
@@ -32,7 +34,7 @@ class ReedVacanciesSpider(Spider):
         absolute_next_page_url = 'https://www.reed.co.uk' + next_page_url
 
         #  Randomly delay the request a bit to avoid overloading.
-        sleep_time = random.randint(15, 20)
+        sleep_time = random.randint(8, 12)
         time.sleep(sleep_time)
 
         # Get the page and send to the parsing function
@@ -49,12 +51,15 @@ class ReedVacanciesSpider(Spider):
 
         # Returns employment type as a list [Permanent, Part-Time]
         employment_type = response.xpath('//*[@itemprop="employmentType"]/text()').extract()[0]
+        employment_type_split = employment_type.split(",")
+        job_type = employment_type_split[0]
+        job_time = employment_type_split[1]
 
         # Returns the location i.e. nearest city eg.- Aberdeen
         location = response.xpath('//*[@itemprop="addressLocality"]/text()').extract_first()
 
         # Returns a region if available eg. North England.
-        region = response.xpath('//*[@itemprop="addressRegion"]/text()').extract_first()
+        region = response.xpath('//*[@itemprop="addressRegion"]/@content').extract_first()
 
         # Returns the country eg.- Scotland
         country = response.xpath('//*[@id="jobCountry"]/@value').extract_first()
@@ -66,6 +71,7 @@ class ReedVacanciesSpider(Spider):
         posted_by = response.xpath('//*[@itemprop="name"]/text()').extract_first()
 
         # Returns the url of organization who posted it eg. ''https://www.reed.co.uk/jobs/nhs-highland/p45349'
+        # It is the first item in the returned list of urls.
         job_poster_url = response.xpath('//*[@itemprop="url"]/@content').extract()[0]
 
         # Returns the full job-title eg. 'Senior Health & Social Care Support Worker'
@@ -73,7 +79,10 @@ class ReedVacanciesSpider(Spider):
         # Another alternative:  job_title = response.xpath('//*[@itemprop="title"]/@content').extract_first()
 
         # Returns the full job description with html tags.
-        job_desc = response.xpath('//*[@itemprop="description"]').extract_first()
+        job_desc_with_html = response.xpath('//*[@itemprop="description"]').extract_first()
+        # The lxml parser is used to remove html tags from the extracted job description.
+        job_desc = BeautifulSoup(job_desc_with_html, "lxml").text
+
 
         # Returns the date job was posted.
         date_posted = response.xpath('//*[@itemprop="datePosted"]/@content').extract_first()
@@ -93,7 +102,8 @@ class ReedVacanciesSpider(Spider):
         yield {
             'Job_Url': full_job_url,
             'Job_Id': job_id,
-            'Employment_Type': employment_type,
+            'Job_Type': job_type,
+            'Job_Time': job_time,
             'Location': location,
             'Region': region,
             'Salary': salary,
