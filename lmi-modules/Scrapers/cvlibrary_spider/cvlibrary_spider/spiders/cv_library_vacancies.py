@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from scrapy import Spider
 from scrapy.http import Request
 import time
 import random
+from bs4 import BeautifulSoup
 
 class CvLibraryVacanciesSpider(scrapy.Spider):
     name = 'cv-library-vacancies'
@@ -24,24 +24,23 @@ class CvLibraryVacanciesSpider(scrapy.Spider):
         # I avoided while loop to check if the next page is available.
         # I certainly do not want to run the code till end of the database, that will be too much on the server.
         # The next page link is the last element returned in the list extracted by the xpath selector.
+        # NB- cv-library shuffles the job viewed on each new connection.
 
         # We will retrieve the list first.
         next_page_list = response.xpath('//*[@class="mmpage"]/a/@href').extract()
-
         # Then get the no of items in the list. i.e. len of list.
         next_page_list_length = len(next_page_list)
-
         # We will calculate the last element and use it to retrieve the link from the list.
         next_page_list_index = next_page_list_length - 1
-
         # We will pass the index no to the selector to extract it
         next_page_url = next_page_list[next_page_list_index]
+        # We could also achieve all these by simply specifying first list element from the back with slice [-1]
 
         # Add the domain to make it a complete url
         absolute_next_page_url = 'https://www.cv-library.co.uk' + next_page_url
 
         #  Randomly delay the request a bit to avoid overloading.
-        sleep_time = random.randint(15, 20)
+        sleep_time = random.randint(10, 15)
         time.sleep(sleep_time)
 
         # Get the page and send to the parsing function
@@ -49,66 +48,80 @@ class CvLibraryVacanciesSpider(scrapy.Spider):
 
     def parse_vacancy(self, response):
 
+        # We need employment type Permanent, Part-time
+        # This will return the job type i.e. Permanent
+        # cv-library also has contract length but will be ignored as it is not available on others.
+
+        # A json string with all jobs info is returned in the header of the page.
+        # However, I'll only extract what cannot be accessed via direct class-name with string operations on the json
+        json_string = response.xpath('//html/head/script').extract()
+        json_string= json_string[0]
+
+        # "JOB_TYPE": "Permanent", "PAGE_TYPE"
+        # Look for where the job_type appears in the string. The index for the first character J is returned.
+        job_type_start = (json_string.find('JOB_TYPE') + 11)
+        # Look for where page_type appears in the string. The index for the first character P is returned.
+        page_type_start = (json_string.find('PAGE_TYPE') - 3)
+        # Get the word in between.
+        job_type = json_string[job_type_start:page_type_start]
+
+        # "JOB_INDUSTRY":"Medical/Pharmaceutical/Scientific","USER_TYPE"
+        job_industry_start = (json_string.find('JOB_INDUSTRY') + 15)
+        user_type_start = (json_string.find('USER_TYPE') -3)
+        job_industry = json_string[job_industry_start:user_type_start]
+
+        # "START_DATE":"ASAP","JOB_INDUSTRY"
+        start_date_begins = (json_string.find('START_DATE') + 13)
+        job_industry_start_point = (json_string.find('JOB_INDUSTRY') -3)
+        validity = json_string[start_date_begins: job_industry_start_point]
+
+        # "JOB_TOWN":"Colchester","JOB_REFERENCE"
+        start_job_town = (json_string.find('JOB_TOWN') + 11)
+        start_job_reference = (json_string.find('JOB_REFERENCE') -3)
+        location = json_string[start_job_town: start_job_reference]
+
+        # "JOB_COUNTY":" Essex","JOB_COMPANY_ID"
+        start_job_county = (json_string.find('JOB_COUNTY') + 13)
+        start_job_company_id = (json_string.find('JOB_COMPANY_ID') - 3)
+        region = json_string[start_job_county: start_job_company_id]
+
+        # N/A not provided in their data model. A work around will be provided during data preparation.
+        country = 'N/A'
+
+        # Returns the full job description in a <div> with html tags as a list.
+        job_desc_with_html = response.xpath('//*[@class="jd-details jobview-desc"]').extract()
+        # Convert the list to string so that itcan be parsed.
+        # The slicing will help remove [\'<div class="jd-details jobview-desc">\\n\\n\\n at begining and <div> at end
+        job_desc_string = str (job_desc_with_html)[80:-20]
+        # The lxml parser is used to remove html tags from the extracted job description.
+        job_desc = BeautifulSoup(job_desc_string, "lxml").text
+
         # Returns the actual job url
         full_job_url = response.xpath('//*[@rel="canonical"]/@href').extract_first()
-
         # Returns job id
         job_id = response.xpath('//body/@data-id').extract_first()
-
-        # We need employment type as a list [Permanent, Part-Time]
-        #  This will return the job type i.e. Permanet or Temporary.
-        jobtype = response.xpath('//html/body/div[2]/div/div[2]/div[2]/div[1]/div[1]/div[2]/div[5]/text()').extract_first()
-        # Job time i.e. Full-time or Part time. The splicing helps return a cleaner result 'N/A \xa0'.
-        # Especially when we have FullTime or PartTime as the time.
-        contract_time = (response.xpath('//html/body/div[2]/div/div[2]/div[2]/div[1]/div[1]/div[2]/div[9]/text()').extract_first())[:10]
-        # We will now combine them to have a form similar to the other data sources.
-        employment_type = jobtype + ', ' + contract_time
-
-        # Returns the location i.e. nearest city eg.- Aberdeen
-        location = response.xpath('//div[@id="job-location"]/text()').extract_first()
-
-        # N/A.
-        region = ''
-
-        # N/A
-        country = ''
-
         # Returns salary as a string eg. '£18,292 - £21,349 per annum, pro-rata'. ** Will need to be further processed
         salary = response.xpath('//*[@id="job-salary"]/text()').extract()
-
         # Returns the organization who posted it eg. 'NHS Highland'
         posted_by = response.xpath('//*[@id="js-company-details"]/a/text()').extract_first()
-
         # Returns the url of organization who posted it eg. ''https://www.reed.co.uk/jobs/nhs-highland/p45349'
         job_poster_url = response.xpath('//*[@id="js-company-details"]/a/@href').extract_first()
-
         # Returns the full job-title eg. 'Senior Health & Social Care Support Worker'
         job_title = response.xpath('//h1[@class="jobTitle"]/text()').extract_first()
-
-        # Returns the full job description with html tags.
-        job_desc = response.xpath('//*[@class="jd-details jobview-desc"]').extract()
-
         # Returns the date job was posted.
         # comes out as: '\n   12/07/2018 (20:41)\n   n. The string splice will produce: '12/07/2018'
         date_posted  = (response.xpath('//*[@id="js-posted-details"]/text()').extract_first())[17:27]
-
-        # Returns the date job is valid till. N/A
-        # start_date = (response.xpath('//html/body/div[2]/div/div[2]/div[2]/div[1]/div[1]/div[2]/div[7]/text()').extract_first())[:5]
-
-        # Returns the job industry. N/A
-
         # Adds the time crawled
         time_crawled = time.asctime()
-
         # Adds the name of the data source.
         data_source = "cv-library.co.uk"
 
         yield {
             'Job_Url': full_job_url,
             'Job_Id': job_id,
-            'Employment_Type': employment_type,
             'Location': location,
             'Region': region,
+            'Job_Type': job_type,
             'Salary': salary,
             'Posted_By': posted_by,
             'Job_Poster_Url': job_poster_url,
@@ -116,8 +129,8 @@ class CvLibraryVacanciesSpider(scrapy.Spider):
             'Country': country,
             'Job_Description': job_desc,
             'Date_Posted': date_posted,
-            'Valid_Till': '',
-            'Industry': '',
+            'Valid_Till': validity,
+            'Industry': job_industry,
             'Time_Crawled': time_crawled,
             'Data_Source': data_source
         }

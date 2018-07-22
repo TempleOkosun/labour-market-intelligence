@@ -20,6 +20,8 @@ NEWSPIDER_MODULE = 'cvlibrary_spider.spiders'
 
 USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'
 
+# Export the dictionary using an encoding that will better present texts.
+FEED_EXPORT_ENCODING = "utf-8"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -76,7 +78,7 @@ ITEM_PIPELINES = {
 MONGODB_SERVER = 'localhost'
 MONGODB_PORT = 27017
 MONGODB_DB = 'lmi'
-MONGODB_COLLECTION = 'jobs'
+MONGODB_COLLECTION = 'cv-library-jobs'
 
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -88,7 +90,7 @@ AUTOTHROTTLE_START_DELAY = 10
 AUTOTHROTTLE_MAX_DELAY = 100
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
-AUTOTHROTTLE_TARGET_CONCURRENCY = 0.5
+AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
 # Enable showing throttling stats for every response received:
 #AUTOTHROTTLE_DEBUG = False
 
