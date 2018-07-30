@@ -40,7 +40,7 @@ class CvLibraryVacanciesSpider(scrapy.Spider):
         absolute_next_page_url = 'https://www.cv-library.co.uk' + next_page_url
 
         #  Randomly delay the request a bit to avoid overloading.
-        sleep_time = random.randint(10, 15)
+        sleep_time = random.randint(5, 10)
         time.sleep(sleep_time)
 
         # Get the page and send to the parsing function

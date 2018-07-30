@@ -34,7 +34,7 @@ class ReedVacanciesSpider(Spider):
         absolute_next_page_url = 'https://www.reed.co.uk' + next_page_url
 
         #  Randomly delay the request a bit to avoid overloading.
-        sleep_time = random.randint(8, 12)
+        sleep_time = random.randint(5, 10)
         time.sleep(sleep_time)
 
         # Get the page and send to the parsing function
