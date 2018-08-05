@@ -24,7 +24,7 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 20
+CONCURRENT_REQUESTS = 32
 
 FEED_EXPORT_ENCODING = "utf-8"
 
@@ -89,7 +89,7 @@ AUTOTHROTTLE_START_DELAY = 10
 AUTOTHROTTLE_MAX_DELAY = 150
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
-AUTOTHROTTLE_TARGET_CONCURRENCY = 0.5
+AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
 # Enable showing throttling stats for every response received:
 #AUTOTHROTTLE_DEBUG = False
 

@@ -6,10 +6,13 @@ import time
 import random
 from bs4 import BeautifulSoup
 
+
 class ReedVacanciesSpider(Spider):
+
     name = 'reed-vacancies'
     allowed_domains = ['reed.co.uk']
-    start_urls =['http://reed.co.uk/jobs']
+    start_urls = ['http://reed.co.uk/jobs','https://www.reed.co.uk/jobs?datecreatedoffset=LastTwoWeeks',
+                  'https://www.reed.co.uk/jobs?datecreatedoffset=LastWeek']
 
     def parse(self, response):
         # Get all the urls for the Job Ads on the page
