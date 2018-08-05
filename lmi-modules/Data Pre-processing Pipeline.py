@@ -96,6 +96,7 @@ def data_loader():
                         new_df = pd.concat(frames, ignore_index=True)
                         print('Details of the new data:')
                         print(new_df.info())
+                        # will continue soon.
 
             #  Use the function
             json_file_handler()
