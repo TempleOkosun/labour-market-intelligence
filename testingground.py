@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 client = MongoClient('localhost', 27017)
 db = client.lmi
-collection = db.jobs
+collection = db.reedjobs
 data = pd.DataFrame(list(collection.find()))
 
-data
+print(data.info())
