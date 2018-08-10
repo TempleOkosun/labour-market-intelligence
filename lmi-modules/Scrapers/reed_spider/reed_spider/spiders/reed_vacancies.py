@@ -59,7 +59,7 @@ class ReedVacanciesSpider(Spider):
             url_part_c = '&sortby=DisplayDate'
             absolute_next_page_url = url_part_a + url_part_b + url_part_c
             # Get the page and send to the parsing function
-            yield Request(absolute_next_page_url, errback=self.parse_errors)
+            yield Request(absolute_next_page_url, callback=self.parse, errback=self.parse_errors)
 
     # scrapy filters out duplicated urls to sites already visited
     def parse_vacancy(self, response):
