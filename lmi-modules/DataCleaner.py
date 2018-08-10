@@ -1,11 +1,16 @@
-from functions import InputDataLoader
+import dataloader
+
 import matplotlib.pyplot as plt
 plt.style.use('seaborn')
 
 print('Test')
 
-my = InputDataLoader.data_loader_function()
+
 print('thanks:')
-print(my.head(100))
-my.plot()
-plt.show()
+x = dataloader.data_loader_function()
+
+print('thanks:')
+print('thanks:')
+print('thanks:')
+
+print (x.info())

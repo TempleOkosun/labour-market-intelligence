@@ -1,7 +1,7 @@
 """
-The InputDataLoader module is a robust module with a nested-function to facilitate data loading.
+The data loader module is a module with  functions to facilitate data loading.
 Supports import of JSON file which could be arranged as (an array of JSON objects or JSON objects per line) in the file.
-Supports import of data from MongoDB.
+Supports import of data from MongoDB. Main function to call to load data interactively is the data_loader_function()
 
 Returns:
     A pandas.DataFrame
@@ -15,22 +15,59 @@ import pandas as pd
 from pymongo import MongoClient
 
 
-# The main function to be called for data loading.
-def data_loader_function():
-    """
-    This function will assist users to load data sets.
+class DataLoader():
 
-    Input:
-        Users can selects JSON files through a dialog box or provide MongoDB connection details.
 
-    Returns:
-        A pandas.DataFrame
-    """
 
-    # sub-functions for JSON loading
-    def json_file_path():
+    def __init__(self):
         """
-        This sub-function will open a dialog box to get the JSON file path.
+        This function will assist users to load data sets.
+
+        Input:
+            Users can selects JSON files through a dialog box or provide MongoDB connection details.
+
+        Returns:
+            A pandas.DataFrame
+        """
+        # when data_loader() is called, a simple text-based menu system to interact with the function starts here.
+        def greet():
+            welcome_msg = ('Welcome to the Data Pre-processor of the LMI System. '
+                           'We will begin by loading the data sets into memory.')
+            print(welcome_msg)
+            time.sleep(0.20)
+            # time.sleep(0.20) is a Jupyter Notebook Print-vs-Input Workaround. In case Jupyter notebook is used
+            # This will prevent the input statement below from executing before the print.
+            # https://stackoverflow.com/questions/50439035/jupyter-notebook-input-line-executed-before-print-statement
+        greet()
+
+    def import_data(self):
+        main_menu_msg = ('\nPlease select an option [1, 2 or 0 to exit]: '
+                         '\n [1] To Import JSON data format.'
+                         '\n [2] To Import from MongoDB.'
+                         '\n [0] To Exit.'
+                         '\n ')
+        # We need to catch an exception in case user enters a non integer.
+        data_loader_menu_msg_display = True
+        while data_loader_menu_msg_display:
+            try:
+                main_menu_option = int(input(main_menu_msg))
+            except ValueError:
+                print("Whoops! That's not a number.")
+                continue
+            else:
+                print("Ok.")
+                data_loader_menu_msg_display = False
+        # We are now sure we are getting an integer. Call the right handler.
+        if main_menu_option == 1:
+            data = DataLoader.json_file_handler(self)
+        else:
+            data = DataLoader.mongodb_data_import(self)
+        return data
+
+    # functions for JSON loading
+    def file_path_finder(self):
+        """
+        This function will open a dialog box to help get the JSON file path.
 
         Input:
             User selects JSON file through a dialog box.
@@ -46,13 +83,13 @@ def data_loader_function():
         root.destroy()
         return file_name
 
-    def json_structure():
+    def json_structure(self):
         """
-        This sub-function will help determine JSON file structure i.e. how the JSON documents are
+        This function will help determine JSON file structure i.e. how the JSON documents are
         separated within the file so that the file can be read in properly.
 
         Input:
-            User provides an integer input.
+            User provides an integer input based ion displayed question.
 
         Returns:
             The JSON file structure type an Int [1 or 2 ] to be used by main loader function.
@@ -77,9 +114,9 @@ def data_loader_function():
                 json_file_structure_menu = False
             return json_structure_option
 
-    def load_json_data(json_structure_option, json_file_name):
+    def load_json_data(self, json_structure_option, json_file_name):
         """
-        This sub-function will load the JSON file into memory using the appropriate loader based on
+        This function will load the JSON file into memory using the appropriate loader based on
         the JSON file structure option and file path given.
 
         Input:
@@ -95,9 +132,9 @@ def data_loader_function():
             data_frame = pd.read_json(path_or_buf=json_file_name, lines=True)
         return data_frame
 
-    def add_another_data_handler():
+    def add_another_data_handler(self):
         """
-        This sub-function will ask if additional data is available to be merge.
+        This function will ask if additional data is available to be merge.
 
         Input:
             An integer [1 or 2] representing to add another data or proceed respectively.
@@ -122,7 +159,7 @@ def data_loader_function():
                 merge_data_msg_display = False
         return merge_data_option
 
-    def json_file_handler(new_df=None):
+    def json_file_handler(self, load_data=None):
         """
         This sub-function implements the actual user import process for json files. It uses other json sub-functions.
         It handles merging of additional data into a single DataFrame.
@@ -135,15 +172,14 @@ def data_loader_function():
         Returns:
             A pandas.DataFrame loaded in memory for manipulations.
         """
-        greet()
         msg = '\nLoad JSON Documents.'
         print(msg)
         time.sleep(0.20)
-        json_file_name = json_file_path()
-        json_structure_option = json_structure()
+        json_file_name = DataLoader.file_path_finder(self)
+        json_structure_option = DataLoader.json_structure(self)
         print('The selected file is: ' + json_file_name)
         print('The JSON file structure type is: ' + str(json_structure_option))
-        current_data_frame = load_json_data(json_structure_option, json_file_name)
+        current_data_frame = DataLoader.load_json_data(self, json_structure_option, json_file_name)
         no_of_files = 1
         print('Total no. of data loaded: ' + str(no_of_files))
         print('Details of the current data:')
@@ -154,14 +190,14 @@ def data_loader_function():
         print('\nData Merging Process')
         merge_data_menu = True  # Show the menu for the first time alert.
         while merge_data_menu:
-            merge_data_option = add_another_data_handler()
+            merge_data_option = DataLoader.add_another_data_handler(self)
             # A new DataFrame i.e. new_df will be formed if there is a choice for add i.e.merge.
             if merge_data_option == 1:
-                new_df_to_merge_file_name = json_file_path()
-                new_json_structure_option = json_structure()
+                new_df_to_merge_file_name = DataLoader.file_path_finder(self)
+                new_json_structure_option = DataLoader.json_structure(self)
                 print('The selected file is: ' + new_df_to_merge_file_name)
                 print('The JSON file structure is: ' + str(json_structure_option))
-                df_to_merge = load_json_data(new_json_structure_option, new_df_to_merge_file_name)
+                df_to_merge = DataLoader.load_json_data(self, new_json_structure_option, new_df_to_merge_file_name)
                 frames = [current_data_frame, df_to_merge]
                 new_df = pd.concat(frames, ignore_index=True, sort=False)
                 no_of_files = no_of_files + 1
@@ -169,18 +205,22 @@ def data_loader_function():
                 print('Details of the new data:')
                 print(new_df.info())
                 print(new_df.head())
+                continue
+                return new_df
+
+
             # The initial DataFrame i.e. current_data_frame is put in new_df variable if there is no merge.
             else:
                 new_df = current_data_frame
                 merge_data_menu = False  # Exit the outer while loop.
-        loaded_data = new_df  # The produced data frame is accessed in the function body and assigned to be returned.
-        input('JSON data now successfully loaded into memory. Press enter to proceed\n')
-        return loaded_data
+                load_data = new_df
 
-    # sub-functions mongodb loading.
-    def mongodb_details():
+            return load_data
+
+    # functions related to mongodb loading.
+    def mongodb_conn_details(self):
         """
-        This sub-function will help get mongodb connection details.
+        This function will help us get mongodb connection details through series of questions presented to users.
 
         Input:
             Users will be asked questions to determine this.
@@ -204,7 +244,17 @@ def data_loader_function():
                                    'MONGODB_PORT_NO': mongodb_port_no}
         return mongodb_connect_details
 
-    def mongodb_data_loader(connection_details):
+
+    def mongodb_load_collection(self, connection_details):
+        """
+        This function will help us load data from a mongodb collection to a pandas.DataFrame.
+
+        Input:
+            Connection details as dict with keys:'MONGODB_SERVER_NAME','MONGODB_PORT_NO','MONGODB_DB_NAME','MONGODB_COLLECTION_NAME'
+
+        Returns:
+            A pandas.DataFrame is returned
+        """
         server_name = connection_details['MONGODB_SERVER_NAME']
         port_no = connection_details['MONGODB_PORT_NO']
         database_name = connection_details['MONGODB_DB_NAME']
@@ -219,10 +269,19 @@ def data_loader_function():
         data_from_db = pd.DataFrame(list(collection.find()))
         return data_from_db
 
-    def mongodb_handler():
-        welcome= greet()
-        connection_details = mongodb_details()
-        data_from_db = mongodb_data_loader(connection_details)
+
+    def mongodb_data_import(self):
+        """
+       This function will help the user load data sets from mongodb collection.
+
+       Input:
+           Connection details as dict with keys:'MONGODB_SERVER_NAME','MONGODB_PORT_NO','MONGODB_DB_NAME','MONGODB_COLLECTION_NAME'
+
+       Returns:
+           A pandas.DataFrame is returned
+       """
+        connection_details = DataLoader.mongodb_conn_details(self)
+        data_from_db = DataLoader.mongodb_load_collection(self, connection_details)
         input('MongoDB data is successfully loaded into memory. Press enter to continue.\n')
         no_of_collection = 1
         print('Total no. of collections loaded: ' + str(no_of_collection))
@@ -233,7 +292,7 @@ def data_loader_function():
         print('\nData Merging Process')
         merge_data_menu = True  # Show the menu for the first time alert.
         while merge_data_menu:
-            add_another_data_option = add_another_data_handler()
+            add_another_data_option = DataLoader.add_another_data_handler(self)
             # A new DataFrame will be formed if user chooses to add another data i.e. merge.
             if add_another_data_option == 1:
                 con_details_msg = ('Do you want to use the previous database and connection details?\n'
@@ -259,9 +318,9 @@ def data_loader_function():
                     current_connection_details['MONGODB_COLLECTION_NAME'] = new_collection_name
                 else:
                     # call the connection manager to ask for an entirely new details.
-                    current_connection_details = mongodb_details()
+                    current_connection_details = DataLoader.mongodb_conn_details(self)
                 # Then use the current connection details to load the additional data set
-                new_df = mongodb_data_loader(current_connection_details)
+                new_df = DataLoader.mongodb_load_collection(self, current_connection_details)
                 frames = [data_from_db, new_df]
                 new_df = pd.concat(frames, ignore_index=True, sort=False)
                 no_of_collection = no_of_collection + 1
@@ -269,44 +328,11 @@ def data_loader_function():
                 print('Details of the new data:')
                 print(new_df.info())
                 print(new_df.head())
+                return new_df
             else:
-                new_df = data_from_db
                 merge_data_menu = False  # Exit the outer while loop.
-        loaded_data = new_df  # The produced data frame is accessed in the function body and assigned to be returned.
+                return data_from_db
+            return
         input('MongoDB collection data now successfully loaded into memory. Press enter to proceed\n')
-        return loaded_data
-
-    # when data_loader() is called, a simple text-based menu system to interact with the function starts here.
-    def greet():
-        welcome_msg = ('Welcome to the Data Pre-processor of the LMI System. '
-                       'We will begin by loading the data sets into memory.')
-        print(welcome_msg)
-        time.sleep(0.20)
-        # time.sleep(0.20) is a Jupyter Notebook Print-vs-Input Workaround. In case Jupyter notebook is used
-        # This will prevent the input statement below from executing before the print.
-        # https://stackoverflow.com/questions/50439035/jupyter-notebook-input-line-executed-before-print-statement
-
-    main_menu_msg = ('\nPlease select an option [1, 2 or 0 to exit]: '
-                     '\n [1] To Import JSON data format.'
-                     '\n [2] To Import from MongoDB.'
-                     '\n [0] To Exit.'
-                     '\n ')
-    # We need to catch an exception in case user enters a non integer.
-    data_loader_menu_msg_display = True
-    while data_loader_menu_msg_display:
-        try:
-            main_menu_option = int(input(main_menu_msg))
-        except ValueError:
-            print("Whoops! That's not a number.")
-            continue
-        else:
-            print("Ok.")
-            data_loader_menu_msg_display = False
-    # We are now sure we are getting an integer. Call the right handler.
-    if main_menu_option == 1:
-        data = json_file_handler()
-    else:
-        data = mongodb_handler()
-    return data
 
 

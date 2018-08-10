@@ -14,7 +14,7 @@ SPIDER_MODULES = ['cvlibrary_spider.spiders']
 NEWSPIDER_MODULE = 'cvlibrary_spider.spiders'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'cvlibrary_spider (+http://www.yourdomain.com)'
+# USER_AGENT = 'cvlibrary_spider (+http://www.yourdomain.com)'
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'
 
 # Export the dictionary using an encoding that will better present texts.
@@ -67,7 +67,7 @@ DEFAULT_REQUEST_HEADERS = {
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
+# EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
 
@@ -76,7 +76,7 @@ DEFAULT_REQUEST_HEADERS = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 # Settings for connecting to MongoDB
 ITEM_PIPELINES = {
-    'cvlibrary_spider.pipelines.MongoDBPipeline':300,
+    'cvlibrary_spider.pipelines.MongoDBPipeline': 300,
 }
 
 MONGODB_SERVER = 'localhost'

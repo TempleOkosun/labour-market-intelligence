@@ -67,8 +67,8 @@ class CvLibraryVacanciesSpider(Spider):
             #  Randomly delay the request a bit to avoid overloading.
             sleep_time = random.randint(5, 10)
             time.sleep(sleep_time)
-            # Get the page and send to the parsing function
-            yield Request(absolute_next_page_url)
+            # Get the page and send to the parsing method parse
+            yield Request(absolute_next_page_url, callback=self.parse, dont_filter=False,  errback=self.parse_errors)
 
     def parse_vacancy(self, response):
         """

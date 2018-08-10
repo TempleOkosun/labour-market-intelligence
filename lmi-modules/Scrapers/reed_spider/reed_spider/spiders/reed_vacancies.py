@@ -15,16 +15,15 @@ from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError, TCPTimedOutError
 from bs4 import BeautifulSoup
 
+
 class ReedVacanciesSpider(Spider):
     """
     ReedVacanciesSpider defines how reed.co.uk will be scraped.
     It includes how to perform the crawl i.e following links, and how to extract structured data from it
     """
-
     name = 'reed-vacancies'
     allowed_domains = ['reed.co.uk']
-    start_urls = ['http://reed.co.uk/jobs','https://www.reed.co.uk/jobs?datecreatedoffset=LastTwoWeeks',
-                  'https://www.reed.co.uk/jobs?datecreatedoffset=LastWeek']
+    start_urls = ['https://www.reed.co.uk/jobs?pageno=1&sortby=DisplayDate']
 
     # Request for the start urls. Send the response as an argument to default method 'parse' & to 'parse_vacancy' also.
     def parse(self, response):
@@ -45,20 +44,22 @@ class ReedVacanciesSpider(Spider):
         for job_url in job_urls:
             actual_url = 'https://www.reed.co.uk' + job_url
             yield Request(actual_url, callback=self.parse_vacancy, errback=self.parse_errors)
-
         # For Processing next page.
         # Get the url for next page.
         # NB: reed.co.uk shuffles the data view every time a new connection is started.
         next_page_url = response.xpath('//*[@id="nextPage"]/@href').extract_first()
-
         # Get the page and send to the parse method, A loop.
+
         if next_page_url is not None:
             #  Randomly delay the request a bit to avoid overloading.
             sleep_time = random.randint(5, 10)
             time.sleep(sleep_time)
-            # Add the domain to make it a complete url
-            absolute_next_page_url = 'https://www.reed.co.uk' + next_page_url
-            yield Request(absolute_next_page_url, callback=self.parse)
+            url_part_a = 'https://www.reed.co.uk/jobs?pageno='
+            url_part_b = str(int(next_page_url.split('=')[1].split('&')[0])+1)
+            url_part_c = '&sortby=DisplayDate'
+            absolute_next_page_url = url_part_a + url_part_b + url_part_c
+            # Get the page and send to the parsing function
+            yield Request(absolute_next_page_url, errback=self.parse_errors)
 
     # scrapy filters out duplicated urls to sites already visited
     def parse_vacancy(self, response):
