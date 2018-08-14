@@ -114,7 +114,7 @@ def add_another_data_handler(new_df=None):
     return merge_data_option
 
 
-def json_file_handler(new_df=None):
+def json_file_handler():
     """
     This sub-function implements the actual user import process for json files. It uses other json sub-functions.
     It handles merging of additional data into a single DataFrame.
@@ -141,32 +141,33 @@ def json_file_handler(new_df=None):
     print('Details of the current data:')
     print(current_data_frame.info())
     print(current_data_frame.head())
-
     #  Add another data i.e merge row wise.
+    # Show the menu for the first time alert.
     print('\nData Merging Process')
-    merge_data_menu = True  # Show the menu for the first time alert.
-    while merge_data_menu:
-        merge_data_option = add_another_data_handler()
-        # A new DataFrame i.e. new_df will be formed if there is a choice for add i.e.merge.
-        if merge_data_option == 1:
-            new_df_to_merge_file_name = file_path_finder()
-            new_json_structure_option = json_structure()
-            print('The selected file is: ' + new_df_to_merge_file_name)
-            print('The JSON file structure is: ' + str(json_structure_option))
-            df_to_merge = load_json_data(new_json_structure_option, new_df_to_merge_file_name)
-            frames = [current_data_frame, df_to_merge]
-            new_df = pd.concat(frames, ignore_index=True, sort=False)
-            no_of_files = no_of_files + 1
-            print('Total no. of data loaded: ' + str(no_of_files))
-            print('Details of the new data:')
-            print(new_df.info())
-            print(new_df.head())
-            return new_df
+    merge_data_option = add_another_data_handler()
+    if merge_data_option == 1:
+        new_df_to_merge_file_name = file_path_finder()
+        new_json_structure_option = json_structure()
+        print('The selected file is: ' + new_df_to_merge_file_name)
+        print('The JSON file structure is: ' + str(json_structure_option))
+        df_to_merge = load_json_data(new_json_structure_option, new_df_to_merge_file_name)
+        frames = [current_data_frame, df_to_merge]
+        new_df = pd.concat(frames, ignore_index=True, sort=False)
+        no_of_files = no_of_files + 1
+        print('Total no. of data loaded: ' + str(no_of_files))
+        print('Details of the new data:')
+        print(new_df.info())
+        print(new_df.head())
+    # The initial DataFrame i.e. current_data_frame is put in new_df variable if there is no merge.
+    elif merge_data_option == 2:
+        new_df= current_data_frame
+        print('Total no. of data loaded: ' + str(no_of_files))
+        print('Details of the current data:')
+        print(new_df.info())
+        print(new_df.head())
+    input('Press enter to continue.')
+    return (new_df.head)
 
-        # The initial DataFrame i.e. current_data_frame is put in new_df variable if there is no merge.
-        else:
-            merge_data_menu = False  # Exit the outer while loop.
-            return current_data_frame
 
 
 # functions related to mongodb loading.
@@ -328,8 +329,8 @@ def data_loader_function():
             data_loader_menu_msg_display = False
     # We are now sure we are getting an integer. Call the right handler.
     if main_menu_option == 1:
-        data = json_file_handler()
+        my_data = json_file_handler()
     else:
-        data = mongodb_data_import()
-    return data
+        my_data = mongodb_data_import()
+    return type(my_data)
 

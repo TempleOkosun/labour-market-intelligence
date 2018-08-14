@@ -3,7 +3,7 @@
 Main module for collecting data automatically from cv-library.co.uk
 
 Returns:
-    A dictionary of the data points specified to be collected into a MongoDB collection.
+    A dictionary of the data points specified to be extracted into a MongoDB collection.
 """
 
 import time
@@ -19,7 +19,7 @@ from bs4 import BeautifulSoup
 class CvLibraryVacanciesSpider(Spider):
     """
     CvLibraryVacanciesSpider defines how cv-library.co.uk will be scraped.
-    It includes how to perform the crawl i.e following links, and how to extract structured data from it
+    It includes how to perform the crawl i.e following links, and how to extract structured data from it.
     """
     name = 'cv-library-vacancies'
     allowed_domains = ['cv-library.co.uk']
@@ -29,12 +29,12 @@ class CvLibraryVacanciesSpider(Spider):
     def parse(self, response):
         """
         This method Requests to crawl the start URLs, and specify a callback method 'parse_vacancy'
-        to be called to extract data from the response object downloaded.
+        to be called to extract data points from the response object(html page) downloaded.
         A link to the next page is also retrieved in the response and used to schedule another request using the
         same 'parse' method as callback. This forms a loop that runs till there is no more pages.
         Finally, it sends details of any encountered errors to the parse_errors method.
 
-        :return: response(web page) sent to the method 'parse' and 'parse_vacancy'
+        :return: response(web page) sent to the method 'parse_vacancy' to extract data points and next_page link sent to 'parse' again till no more pages.
         """
         # xpath to get all the urls to the full job advert details page for the summarized job ads shown on start urls.
         job_urls = response.xpath('//*[@id="js-jobtitle-details"]/a/@href').extract()
@@ -72,9 +72,9 @@ class CvLibraryVacanciesSpider(Spider):
 
     def parse_vacancy(self, response):
         """
-        This method extracts the specified data points from the response object (web page)
-        :param response:
-        :return: A python dictionary of all data points.
+        This method extracts the specified data points from the response object (web page) from parse method.
+        :param response (web page):
+        :return: A python dictionary of all extracted data points is produced and sent to the database.
         """
         self.logger.info('Got successful response from {}'.format(response.url))
 
@@ -177,6 +177,7 @@ class CvLibraryVacanciesSpider(Spider):
     def parse_errors(self, failure):
         """
         This method examines the errors from the Requests in the parse method.
+        The errors are logged at the scrapy console.
         """
         # Log all failures.
         self.logger.error(repr(failure))
@@ -192,3 +193,7 @@ class CvLibraryVacanciesSpider(Spider):
         elif failure.check(TimeoutError, TCPTimedOutError):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
+
+
+if __name__ == 'main':
+    CvLibraryVacanciesSpider()

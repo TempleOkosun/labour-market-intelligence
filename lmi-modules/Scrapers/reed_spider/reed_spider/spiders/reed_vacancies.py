@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Main module for collecting data automatically from reed.co.uk
-
+Three different Scrapers were developed to scrap reed.co.uk (requests were dropping at some point.) This is the first
+module designed to scrap reed.co.uk. Design 1: The same pattern with the CvLibraryVacancies Scraper.
 Returns:
-    A dictionary of the data points specified to be collected into a MongoDB collection.
+    A dictionary of the data points specified to be extracted into a MongoDB collection.
 """
 
 import time
@@ -29,7 +29,7 @@ class ReedVacanciesSpider(Spider):
     def parse(self, response):
         """
         This method Requests to crawl the start URLs, and specify a callback method 'parse_vacancy'
-        to be called to extract data from the response object downloaded.
+        to be called to extract data points from the response object (html page) downloaded.
         A link to the next page is also retrieved in the response and used to schedule another request using the
         same 'parse' method as callback. This forms a loop that runs till there is no more pages.
         Finally, it sends details of any encountered errors to the parse_errors method.
@@ -66,7 +66,7 @@ class ReedVacanciesSpider(Spider):
         """
         This method extracts the specified data points from the response object (web page)
         :param response:
-        :return: A python dictionary of all data points.
+        :return: A python dictionary of all data points extracted and sends it to the database.
         """
         self.logger.info('Got successful response from {}'. format(response.url))
         # This xpath returns a list of urls, the actual job url is in index [1]
@@ -148,7 +148,7 @@ class ReedVacanciesSpider(Spider):
         """
         This method examines the errors from the Requests in the parse method.
         """
-        # Log all failures.
+        # Logs all failures to scrapy console.
         self.logger.error(repr(failure))
         if failure.check(HttpError):
             # these exceptions come from HttpError spider middleware
@@ -162,3 +162,7 @@ class ReedVacanciesSpider(Spider):
         elif failure.check(TimeoutError, TCPTimedOutError):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
+
+
+if __name__ == 'main':
+    ReedVacanciesSpider()

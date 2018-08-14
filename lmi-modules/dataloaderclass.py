@@ -15,10 +15,7 @@ import pandas as pd
 from pymongo import MongoClient
 
 
-class DataLoader():
-
-
-
+class DataLoader:
     def __init__(self):
         """
         This function will assist users to load data sets.
@@ -40,7 +37,8 @@ class DataLoader():
             # https://stackoverflow.com/questions/50439035/jupyter-notebook-input-line-executed-before-print-statement
         greet()
 
-    def import_data(self):
+    def import_data(data):
+
         main_menu_msg = ('\nPlease select an option [1, 2 or 0 to exit]: '
                          '\n [1] To Import JSON data format.'
                          '\n [2] To Import from MongoDB.'
