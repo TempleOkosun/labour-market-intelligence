@@ -39,10 +39,13 @@ class CvLibraryVacanciesSpider(Spider):
         # xpath to get all the urls to the full job advert details page for the summarized job ads shown on start urls.
         job_urls = response.xpath('//*[@id="js-jobtitle-details"]/a/@href').extract()
 
+
         # For each url in the list, retrieve the page, i.e. the page to the job ads full description.
         # Return to the parse method (parse_vacancy)to extract data points.
+        sleep_time = random.randint(3, 5)
         for job_url in job_urls:
             actual_url = 'https://www.cv-library.co.uk' + job_url
+            time.sleep(sleep_time)
             yield Request(actual_url, callback=self.parse_vacancy, errback=self.parse_errors)
 
         # For Processing next page.
@@ -65,7 +68,6 @@ class CvLibraryVacanciesSpider(Spider):
             # Add the domain to make it a complete url
             absolute_next_page_url = 'https://www.cv-library.co.uk' + next_page_url
             #  Randomly delay the request a bit to avoid overloading.
-            sleep_time = random.randint(5, 10)
             time.sleep(sleep_time)
             # Get the page and send to the parsing method parse
             yield Request(absolute_next_page_url, callback=self.parse, dont_filter=False,  errback=self.parse_errors)
@@ -73,7 +75,7 @@ class CvLibraryVacanciesSpider(Spider):
     def parse_vacancy(self, response):
         """
         This method extracts the specified data points from the response object (web page) from parse method.
-        :param response (web page):
+        :param:  response(web page)
         :return: A python dictionary of all extracted data points is produced and sent to the database.
         """
         self.logger.info('Got successful response from {}'.format(response.url))
@@ -138,20 +140,26 @@ class CvLibraryVacanciesSpider(Spider):
 
         # Returns the actual job url
         full_job_url = response.xpath('//*[@rel="canonical"]/@href').extract_first()
+
         # Returns job id
         job_id = response.xpath('//body/@data-id').extract_first()
+
         # Returns salary as a string eg. '£18,292 - £21,349 per annum, pro-rata'. ** Will need to be further processed
         salary = response.xpath('//*[@id="job-salary"]/text()').extract()
+
         # Returns the organization who posted it eg. 'NHS Highland'
         posted_by = response.xpath('//*[@id="js-company-details"]/a/text()').extract_first()
+
         # Returns the url of organization who posted it eg. ''https://www.reed.co.uk/jobs/nhs-highland/p45349'
         job_poster_url = response.xpath('//*[@id="js-company-details"]/a/@href').extract_first()
 
         # Returns the date job was posted.
         # comes out as: '\n   12/07/2018 (20:41)\n   n. The string splice will produce: '12/07/2018'
         date_posted  = (response.xpath('//*[@id="js-posted-details"]/text()').extract_first())[17:27]
+
         # Adds the time crawled
         time_crawled = time.asctime()
+
         # Adds the name of the data source.
         data_source = "cv-library.co.uk"
 
