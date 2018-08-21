@@ -7,3 +7,6 @@ bs4
 lxml
 request
 pandas
+matplotlib
+vc++14
+textblob
