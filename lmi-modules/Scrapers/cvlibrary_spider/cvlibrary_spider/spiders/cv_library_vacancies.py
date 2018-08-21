@@ -73,7 +73,7 @@ class CvLibraryVacanciesSpider(Spider):
     def parse_vacancy(self, response):
         """
         This method extracts the specified data points from the response object (web page) from parse method.
-        :param response (web page):
+        :param:  response(web page)
         :return: A python dictionary of all extracted data points is produced and sent to the database.
         """
         self.logger.info('Got successful response from {}'.format(response.url))
